@@ -10,6 +10,10 @@ import LocalAuthentication
 #endif
 import Observation
 
+#if canImport(AuthenticationServices)
+import AuthenticationServices
+#endif
+
 /// The default file name that holds the list of providers.
 private let defaultResourceName = "oauth"
 /// The default file extension.
@@ -484,3 +488,43 @@ extension OAuth {
         publish(state: .authorized(provider, authorization))
     }
 }
+
+#if canImport(AuthenticationServices)
+import AuthenticationServices
+
+extension OAuth {
+
+    private static var webSessionCoordinatorKey: UInt8 = 0
+
+    @ObservationIgnored
+    private var webSessionCoordinator: OAWebSessionCoordinator? {
+        get {
+            objc_getAssociatedObject(self, &Self.webSessionCoordinatorKey) as? OAWebSessionCoordinator
+        }
+        set {
+            objc_setAssociatedObject(self, &Self.webSessionCoordinatorKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+
+    public func authorize(
+        provider: Provider,
+        grantType: GrantType = .pkce(.init()),
+        contextProvider: (any ASWebAuthenticationPresentationContextProviding)? = nil
+    ) {
+        #if canImport(UIKit)
+        let usedProvider = contextProvider ?? OAPresentationContextProvider()
+        let coordinator = OAWebSessionCoordinator(oauth: self, contextProvider: usedProvider)
+        #else
+        guard let usedProvider = contextProvider else {
+            assertionFailure("No context provider available on this platform.")
+            return
+        }
+        let coordinator = OAWebSessionCoordinator(oauth: self, contextProvider: usedProvider)
+        #endif
+        
+        self.webSessionCoordinator = coordinator
+        self.state = .authorizing(provider, grantType)
+        coordinator.update(state: self.state)
+    }
+}
+#endif
