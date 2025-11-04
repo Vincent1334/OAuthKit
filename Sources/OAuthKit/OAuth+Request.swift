@@ -11,6 +11,7 @@ private let httpPost = "POST"
 private let httpAcceptHeaderField = "Accept"
 private let jsonMimeType = "application/json"
 private let responseTypeCode = "code"
+private let formUrlEncodedMimeType = "application/x-www-form-urlencoded"
 
 extension OAuth {
 
@@ -58,9 +59,19 @@ extension OAuth {
             guard var urlComponents = URLComponents(string: provider.accessTokenURL.absoluteString) else { return nil }
             guard let queryItems = buildQueryItems(provider: provider, token: token) else { return nil }
             urlComponents.queryItems = queryItems
-            guard let url = urlComponents.url else { return nil }
+            guard var url = urlComponents.url else { return nil }
+
+            if provider.encodeHttpBody {
+                urlComponents = URLComponents()
+                urlComponents.queryItems = queryItems
+                url = provider.accessTokenURL
+            }
 
             var request = URLRequest(url: url)
+            if provider.encodeHttpBody {
+                request.httpBody = urlComponents.query?.data(using: .utf8)
+                request.setValue(formUrlEncodedMimeType, forHTTPHeaderField: "Content-Type")
+            }
             request.httpMethod = httpPost
             request.setValue(jsonMimeType, forHTTPHeaderField: httpAcceptHeaderField)
             return request
