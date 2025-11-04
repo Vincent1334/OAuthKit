@@ -65,7 +65,7 @@ public final class OAuth: Sendable {
 
     /// Configuration option determining if tokens should be auto refreshed or not.
     @ObservationIgnored
-    private var autoRefresh: Bool = false
+    private var autoRefresh: Bool = true
 
     /// Configuration option determining if the WKWebsiteDataStore used during authorization flows should use an ephemeral datastore.
     /// Set to true if you wish to implement private browsing and force a new login attempt every time an authorization flow is started.
