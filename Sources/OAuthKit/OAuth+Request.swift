@@ -55,7 +55,7 @@ extension OAuth {
         ///   - token: the auth token to refresh
         /// - Returns: an `/authorization` url request
         static func refresh(provider: Provider, token: Token) -> URLRequest? {
-            guard var urlComponents = URLComponents(string: provider.authorizationURL.absoluteString) else { return nil }
+            guard var urlComponents = URLComponents(string: provider.accessTokenURL.absoluteString) else { return nil }
             guard let queryItems = buildQueryItems(provider: provider, token: token) else { return nil }
             urlComponents.queryItems = queryItems
             guard let url = urlComponents.url else { return nil }
